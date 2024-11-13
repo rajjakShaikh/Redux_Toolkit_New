@@ -1,3 +1,4 @@
+// src/features/userSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -5,47 +6,37 @@ export const fetchUsers = createAsyncThunk("user/fetchUsers", async () => {
   const response = await axios.get(
     "https://jsonplaceholder.typicode.com/users"
   );
-  return response.data; // Return the data from the response
+  return response.data;
 });
-
-const initialState = {
-  users: [],
-  loading: false,
-  error: null,
-};
 
 const userSlice = createSlice({
   name: "user",
-  initialState,
-  // reducers: {
-  //   addUser: (state, action) => {
-  //     // Adds a new user to the list
-  //     state.users.push(action.payload);
-  //   },
-  //   DeleteUser: (state, action) => {
-  //     // Remove the user with the matching email or id
-  //     state.users = state.users.filter((user) => user.email !== action.payload);
-  //   },
-  // },
+  initialState: {
+    users: [],
+    isLoading: false,
+    isError: false,
+  },
+  reducers: {
+    addUser: (state, action) => {
+      const newUser = { id: state.users.length + 1, ...action.payload };
+      state.users.push(newUser);
+    },
+  },
   extraReducers: (builder) => {
-    const handlePending = (state) => {
-      state.loading = true; // Set loading to true
-      state.error = null; // Reset any previous errors
-    };
-    const handleFulfilled = (state, action) => {
-      state.loading = false; // Set loading to false
-      state.users = action.payload; // Store the fetched users in the state
-    };
-    const handleRejected = (state, action) => {
-      state.loading = false; // Set loading to false
-      state.error = action.error.message; // Capture the error message
-    };
     builder
-      .addCase(fetchUsers.pending, handlePending)
-      .addCase(fetchUsers.fulfilled, handleFulfilled)
-      .addCase(fetchUsers.rejected, handleRejected);
+      .addCase(fetchUsers.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.users = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state) => {
+        state.isLoading = false;
+        state.isError = true;
+      });
   },
 });
-
-export const { addUser, DeleteUser } = userSlice.actions;
+export const { addUser } = userSlice.actions;
 export default userSlice.reducer;
